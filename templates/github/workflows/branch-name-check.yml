@@ -11,6 +11,12 @@ jobs:
       - name: Branch-Name prüfen
         run: |
           BRANCH="${{ github.head_ref }}"
+          # Integrations-/Release-Branches (develop → main, main) sind keine
+          # Feature-Branches und werden von der Namenskonvention ausgenommen.
+          if [[ "$BRANCH" == "develop" || "$BRANCH" == "main" ]]; then
+            echo "ℹ️ Integrations-/Release-Branch '$BRANCH' – Namensprüfung übersprungen."
+            exit 0
+          fi
           PATTERN="^(feature|bugfix|hotfix|chore|refactor|docs|test)/[0-9]+-[a-z0-9.-]+$"
           if [[ ! "$BRANCH" =~ $PATTERN ]]; then
             echo "❌ Branch-Name '$BRANCH' ungültig."
