@@ -10,7 +10,7 @@ in einer Ansicht, filterbar nach Repository, Priorität, Sprint und Status.
 
 ## Board-URL
 
-https://github.com/users/sirsebi/projects/1
+https://github.com/users/sirsebi/projects/3
 
 ## Board-Felder
 
@@ -34,7 +34,7 @@ Folgende Views im Board anlegen:
 ## Neues Projekt einbinden
 
 ```bash
-gh project link 1 --owner sirsebi --repo sirsebi/neues-projekt
+gh project link 3 --owner sirsebi --repo sirsebi/neues-projekt
 ```
 
 Danach erscheinen neue Issues des Repos automatisch im Board

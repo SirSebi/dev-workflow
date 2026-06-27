@@ -27,14 +27,14 @@ Projektkonfiguration:
   GITHUB_USER=sirsebi
   PROJECT_TYPE=java-spring
   PROJECT_DESCRIPTION=Kurze Beschreibung was das Projekt macht
-  CENTRAL_PROJECT_NUMBER=1
+  CENTRAL_PROJECT_NUMBER=3
   EPICS=v1.0 MVP,v1.1 Erweiterungen
 ```
 
 ## Zentrales Dashboard
 
 Alle Projekte laufen in **einem** GitHub Project Board zusammen:
-→ https://github.com/users/sirsebi/projects/1
+→ https://github.com/users/sirsebi/projects/3
 
 Jedes neue Projekt-Repo wird mit diesem Board verknüpft. Issues und PRs
 aller Projekte erscheinen in einer einzigen Board-Ansicht, filterbar nach

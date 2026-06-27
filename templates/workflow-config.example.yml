@@ -13,7 +13,7 @@ project:
 
 central_board:
   owner: "sirsebi"
-  project_number: 1          # Zentrales Board — immer 1
+  project_number: 3          # Zentrales Board — "Alle Projekte – Übersicht"
 
 branches:
   main: main
