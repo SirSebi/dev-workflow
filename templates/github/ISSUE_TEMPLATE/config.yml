@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Frage / Diskussion
+    url: https://github.com/sirsebi/dev-workflow/discussions
+    about: Allgemeine Fragen zum Workflow

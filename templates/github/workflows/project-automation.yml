@@ -1,0 +1,82 @@
+name: Project Board Automation
+
+on:
+  issues:
+    types: [opened, reopened, closed]
+  pull_request:
+    types: [opened, ready_for_review, closed, converted_to_draft]
+
+env:
+  GITHUB_USER: GITHUB_USER_PLACEHOLDER
+  PROJECT_NUMBER: CENTRAL_PROJECT_NUMBER_PLACEHOLDER
+
+jobs:
+  add-to-project:
+    name: Zum zentralen Board hinzufügen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: https://github.com/users/${{ env.GITHUB_USER }}/projects/${{ env.PROJECT_NUMBER }}
+          github-token: ${{ secrets.PROJECT_TOKEN }}
+
+  set-in-progress:
+    name: Status → In Progress (PR geöffnet)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || '';
+            const match = body.match(/Closes #(\d+)/i);
+            if (!match) return;
+            const nr = parseInt(match[1]);
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: nr, labels: ['status: in progress']
+            });
+            for (const l of ['status: ready', 'status: backlog']) {
+              try { await github.rest.issues.removeLabel({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: nr, name: l
+              }); } catch(e) {}
+            }
+
+  set-in-review:
+    name: Status → In Review (PR ready)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'ready_for_review'
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || '';
+            const match = body.match(/Closes #(\d+)/i);
+            if (!match) return;
+            const nr = parseInt(match[1]);
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: nr, labels: ['status: in review']
+            });
+            try { await github.rest.issues.removeLabel({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: nr, name: 'status: in progress'
+            }); } catch(e) {}
+
+  set-done:
+    name: Status → Done (PR gemerged)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || '';
+            const match = body.match(/Closes #(\d+)/i);
+            if (!match) return;
+            const nr = parseInt(match[1]);
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: nr, labels: ['status: done']
+            });

@@ -1,0 +1,57 @@
+name: 🗂️ Epic
+description: Übergeordnete Anforderung die mehrere Tickets umfasst
+labels: ["type: epic", "status: backlog"]
+body:
+  - type: input
+    id: ziel
+    attributes:
+      label: "🎯 Ziel"
+      description: "Was soll nach Abschluss möglich sein? (1–2 Sätze)"
+      placeholder: "Als [Rolle] möchte ich [Fähigkeit], damit [Nutzen]."
+    validations:
+      required: true
+  - type: textarea
+    id: hintergrund
+    attributes:
+      label: "📋 Hintergrund & Kontext"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: "✅ In Scope"
+      placeholder: "- Feature A\n- Feature B"
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: "🚫 Out of Scope"
+    validations:
+      required: false
+  - type: textarea
+    id: akzeptanzkriterien
+    attributes:
+      label: "✔️ Akzeptanzkriterien"
+      placeholder: "- [ ] Kriterium 1\n- [ ] Kriterium 2"
+    validations:
+      required: true
+  - type: textarea
+    id: child_issues
+    attributes:
+      label: "🔗 Enthaltene Tickets"
+      placeholder: "- #\n- #"
+    validations:
+      required: false
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "⚡ Priorität"
+      options: ["🔴 Critical", "🟠 High", "🟡 Medium", "🟢 Low"]
+    validations:
+      required: true
+  - type: input
+    id: milestone
+    attributes:
+      label: "📅 Milestone / Release"
+      placeholder: "v1.0 – MVP"

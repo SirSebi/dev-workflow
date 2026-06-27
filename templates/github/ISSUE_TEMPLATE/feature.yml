@@ -1,0 +1,84 @@
+name: ✨ Feature
+description: Neue Funktionalität implementieren
+labels: ["type: feature", "status: backlog"]
+body:
+  - type: input
+    id: epic
+    attributes:
+      label: "🗂️ Zugehöriges Epic"
+      placeholder: "#12"
+  - type: textarea
+    id: user_story
+    attributes:
+      label: "📖 User Story"
+      placeholder: "Als [Rolle] möchte ich [Aktion], damit [Nutzen]."
+    validations:
+      required: true
+  - type: textarea
+    id: beschreibung
+    attributes:
+      label: "📋 Technische Beschreibung"
+      description: "Was muss implementiert werden? Welche Schichten/Komponenten sind betroffen?"
+    validations:
+      required: true
+  - type: textarea
+    id: akzeptanzkriterien
+    attributes:
+      label: "✔️ Akzeptanzkriterien"
+      placeholder: "- [ ] Backend-Endpunkt implementiert\n- [ ] Frontend zeigt Daten\n- [ ] Fehlerfall behandelt\n- [ ] Unit Tests vorhanden"
+    validations:
+      required: true
+  - type: textarea
+    id: technische_details
+    attributes:
+      label: "🔧 Technische Details"
+      description: "Klassen, Endpunkte, DB-Felder, API-Kontrakte, Abhängigkeiten"
+  - type: textarea
+    id: abhaengigkeiten
+    attributes:
+      label: "🔗 Abhängigkeiten"
+      placeholder: "Blocked by #\nDepends on #"
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "⚡ Priorität"
+      options: ["🔴 Critical", "🟠 High", "🟡 Medium", "🟢 Low"]
+    validations:
+      required: true
+  - type: dropdown
+    id: size
+    attributes:
+      label: "📏 Größe"
+      options:
+        - "XS – unter 2 Stunden"
+        - "S – 2 bis 4 Stunden"
+        - "M – halber bis ganzer Tag"
+        - "L – 1 bis 3 Tage"
+        - "XL – mehr als 3 Tage (ggf. aufteilen)"
+    validations:
+      required: true
+  - type: checkboxes
+    id: review_checkliste
+    attributes:
+      label: "🔍 Review-Checkliste (vor PR)"
+      options:
+        - label: "Code kompiliert fehlerfrei"
+          required: true
+        - label: "Alle Akzeptanzkriterien erfüllt"
+          required: true
+        - label: "Unit Tests vorhanden und grün"
+          required: true
+        - label: "Kein auskommentierter Code / Debug-Ausgaben"
+          required: true
+        - label: "Kein hardcodierter Wert der in eine Config gehört"
+          required: true
+        - label: "Fehlerbehandlung vollständig"
+          required: true
+        - label: "Logging sinnvoll (nicht zu viel, nicht zu wenig)"
+          required: true
+        - label: "Keine sensitiven Daten im Code"
+          required: true
+        - label: "Branch-Name folgt Konvention (feature/NR-beschreibung)"
+          required: true
+        - label: "PR-Titel folgt Konvention"
+          required: true

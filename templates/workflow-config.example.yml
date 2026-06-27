@@ -1,0 +1,31 @@
+# workflow-config.yml — Projektspezifische Konfiguration
+# Diese Datei in den Root des Projekt-Repos legen.
+# Wird von Claude Code beim Workflow-Setup gelesen.
+
+workflow_version: "1.0"
+workflow_source: "https://github.com/sirsebi/dev-workflow"
+
+project:
+  name: "mein-projekt"
+  type: "java-spring"        # java-spring | nextjs | fullstack
+  description: "Kurzbeschreibung"
+  repo: "sirsebi/mein-projekt"
+
+central_board:
+  owner: "sirsebi"
+  project_number: 1          # Zentrales Board — immer 1
+
+branches:
+  main: main
+  develop: develop
+
+build:
+  java_version: "21"
+  node_version: "20"
+  dev_suffix: true           # develop-Branch baut mit -DEV Suffix
+
+# Optionale Overrides (leer lassen = Workflow-Defaults gelten)
+overrides:
+  sprint_duration_days: 14
+  require_size_label: true
+  allow_direct_push_develop: false

@@ -1,0 +1,65 @@
+name: 🐛 Bugfix
+description: Fehler dokumentieren und beheben
+labels: ["type: bugfix", "status: backlog"]
+body:
+  - type: textarea
+    id: beschreibung
+    attributes:
+      label: "🐛 Fehlerbeschreibung"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduktion
+    attributes:
+      label: "🔁 Schritte zur Reproduktion"
+      placeholder: "1. ...\n2. ...\n3. Fehler tritt auf"
+    validations:
+      required: true
+  - type: textarea
+    id: erwartet
+    attributes:
+      label: "✅ Erwartetes Verhalten"
+    validations:
+      required: true
+  - type: textarea
+    id: tatsaechlich
+    attributes:
+      label: "❌ Tatsächliches Verhalten"
+    validations:
+      required: true
+  - type: input
+    id: umgebung
+    attributes:
+      label: "🖥️ Umgebung"
+      placeholder: "develop / main / v1.2.0"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: "📋 Logs / Stack Trace"
+      render: shell
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "⚡ Priorität"
+      options:
+        - "🔴 Critical – Produktionsausfall"
+        - "🟠 High – Kernfunktion betroffen"
+        - "🟡 Medium – Einschränkung ohne Workaround"
+        - "🟢 Low – Kosmetisch oder mit Workaround"
+    validations:
+      required: true
+  - type: checkboxes
+    id: review_checkliste
+    attributes:
+      label: "🔍 Review-Checkliste (vor PR)"
+      options:
+        - label: "Ursache identifiziert und dokumentiert"
+          required: true
+        - label: "Fix behebt nur diesen Bug, keine Seiteneffekte"
+          required: true
+        - label: "Regressionstest vorhanden"
+          required: true
+        - label: "Alle bestehenden Tests grün"
+          required: true

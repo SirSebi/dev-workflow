@@ -1,0 +1,43 @@
+name: 🔧 Chore
+description: Infrastruktur, Konfiguration, Refactoring, Dependencies
+labels: ["type: chore", "status: backlog"]
+body:
+  - type: textarea
+    id: beschreibung
+    attributes:
+      label: "📋 Beschreibung"
+    validations:
+      required: true
+  - type: textarea
+    id: akzeptanzkriterien
+    attributes:
+      label: "✔️ Akzeptanzkriterien"
+      placeholder: "- [ ] "
+    validations:
+      required: true
+  - type: dropdown
+    id: kategorie
+    attributes:
+      label: "📂 Kategorie"
+      options:
+        - "CI/CD"
+        - "Dependencies"
+        - "Refactoring"
+        - "Performance"
+        - "Security"
+        - "Dokumentation"
+        - "Infrastruktur / Deployment"
+        - "Sonstiges"
+    validations:
+      required: true
+  - type: dropdown
+    id: size
+    attributes:
+      label: "📏 Größe"
+      options:
+        - "XS – unter 2 Stunden"
+        - "S – 2 bis 4 Stunden"
+        - "M – halber bis ganzer Tag"
+        - "L – 1 bis 3 Tage"
+    validations:
+      required: true
