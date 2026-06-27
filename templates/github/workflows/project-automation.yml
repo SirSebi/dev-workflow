@@ -12,7 +12,7 @@ env:
 
 # Label-Jobs nutzen den Default-GITHUB_TOKEN; der ist repo-weit read-only.
 # issues:/pull-requests: write erlaubt das Setzen der Status-Labels.
-# (Das Board selbst läuft über PROJECT_TOKEN im add-to-project-Job.)
+# (Das Board selbst läuft über PROJECT_TOKEN.)
 permissions:
   contents: read
   issues: write
@@ -28,63 +28,120 @@ jobs:
           project-url: https://github.com/users/${{ env.GITHUB_USER }}/projects/${{ env.PROJECT_NUMBER }}
           github-token: ${{ secrets.PROJECT_TOKEN }}
 
-  set-in-progress:
-    name: Status → In Progress (PR geöffnet)
+  automate:
+    name: Board-Felder & Status-Labels
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    needs: add-to-project
     steps:
       - uses: actions/github-script@v7
         with:
+          # PROJECT_TOKEN (PAT, repo+project) kann sowohl Labels als auch das Projects-v2-Board mutieren.
+          github-token: ${{ secrets.PROJECT_TOKEN }}
           script: |
-            const body = context.payload.pull_request.body || '';
-            const match = body.match(/Closes #(\d+)/i);
-            if (!match) return;
-            const nr = parseInt(match[1]);
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner, repo: context.repo.repo,
-              issue_number: nr, labels: ['status: in progress']
-            });
-            for (const l of ['status: ready', 'status: backlog']) {
-              try { await github.rest.issues.removeLabel({
-                owner: context.repo.owner, repo: context.repo.repo,
-                issue_number: nr, name: l
-              }); } catch(e) {}
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const projectNumber = parseInt(process.env.PROJECT_NUMBER, 10);
+
+            const STATUS_LABELS = [
+              "status: backlog", "status: ready", "status: in progress",
+              "status: in review", "status: done", "status: blocked",
+            ];
+
+            // --- Projekt-Metadaten (ID + Single-Select-Felder/Optionen) per Name auflösen ---
+            async function getProjectMeta() {
+              const body = `projectV2(number:$number){
+                id
+                fields(first:50){ nodes{
+                  ... on ProjectV2SingleSelectField { id name options { id name } }
+                } }
+              }`;
+              let proj = null;
+              // Owner kann User oder Organization sein -> nacheinander versuchen.
+              for (const kind of ["user", "organization"]) {
+                try {
+                  const r = await github.graphql(
+                    `query($login:String!,$number:Int!){ ${kind}(login:$login){ ${body} } }`,
+                    { login: owner, number: projectNumber }
+                  );
+                  proj = r[kind] && r[kind].projectV2;
+                } catch (e) { /* falscher Owner-Typ -> nächste Variante */ }
+                if (proj) break;
+              }
+              if (!proj) throw new Error("Projekt #" + projectNumber + " für " + owner + " nicht gefunden");
+              const fields = {};
+              for (const f of proj.fields.nodes) if (f && f.name) fields[f.name] = f;
+              return { projectId: proj.id, fields };
             }
 
-  set-in-review:
-    name: Status → In Review (PR ready)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.action == 'ready_for_review'
-    steps:
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            const body = context.payload.pull_request.body || '';
-            const match = body.match(/Closes #(\d+)/i);
-            if (!match) return;
-            const nr = parseInt(match[1]);
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner, repo: context.repo.repo,
-              issue_number: nr, labels: ['status: in review']
-            });
-            try { await github.rest.issues.removeLabel({
-              owner: context.repo.owner, repo: context.repo.repo,
-              issue_number: nr, name: 'status: in progress'
-            }); } catch(e) {}
+            async function getItemId(issueNumber, projectId) {
+              const q = `query($owner:String!,$repo:String!,$number:Int!){
+                repository(owner:$owner,name:$repo){ issue(number:$number){
+                  projectItems(first:20){ nodes{ id project{ id } } }
+                } }
+              }`;
+              const r = await github.graphql(q, { owner, repo, number: issueNumber });
+              const nodes = r.repository.issue.projectItems.nodes;
+              const it = nodes.find(n => n.project.id === projectId);
+              return it ? it.id : null;
+            }
 
-  set-done:
-    name: Status → Done (PR gemerged)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
-    steps:
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            const body = context.payload.pull_request.body || '';
-            const match = body.match(/Closes #(\d+)/i);
-            if (!match) return;
-            const nr = parseInt(match[1]);
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner, repo: context.repo.repo,
-              issue_number: nr, labels: ['status: done']
-            });
+            async function setField(projectId, itemId, field, optionName) {
+              if (!field) return;
+              const opt = field.options.find(o => o.name === optionName);
+              if (!opt) return;
+              const m = `mutation($p:ID!,$i:ID!,$f:ID!,$o:String!){
+                updateProjectV2ItemFieldValue(input:{
+                  projectId:$p, itemId:$i, fieldId:$f, value:{ singleSelectOptionId:$o }
+                }){ projectV2Item{ id } }
+              }`;
+              await github.graphql(m, { p: projectId, i: itemId, f: field.id, o: opt.id });
+            }
+
+            // Status-Label sauber tauschen: alle anderen Status-Labels entfernen, Ziel setzen.
+            async function setStatusLabel(issueNumber, target) {
+              for (const l of STATUS_LABELS) {
+                if (l === target) continue;
+                try { await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: l }); } catch (e) {}
+              }
+              await github.rest.issues.addLabels({ owner, repo, issue_number: issueNumber, labels: [target] });
+            }
+
+            function typeFromLabels(labels) {
+              const names = (labels || []).map(l => (l.name || l).toLowerCase());
+              if (names.includes("type: epic")) return "Epic";
+              if (names.includes("type: feature")) return "Feature";
+              return "Issue";
+            }
+
+            function closesIssueNumber() {
+              const body = (context.payload.pull_request && context.payload.pull_request.body) || "";
+              const m = body.match(/Closes #(\d+)/i);
+              return m ? parseInt(m[1], 10) : null;
+            }
+
+            const meta = await getProjectMeta();
+            const event = context.eventName;
+            const action = context.payload.action;
+
+            if (event === "issues" && (action === "opened" || action === "reopened")) {
+              // Type-Feld aus dem type:-Label synchronisieren.
+              const issueNumber = context.payload.issue.number;
+              const itemId = await getItemId(issueNumber, meta.projectId);
+              if (itemId) await setField(meta.projectId, itemId, meta.fields["Type"], typeFromLabels(context.payload.issue.labels));
+              return;
+            }
+
+            if (event === "pull_request") {
+              const issueNumber = closesIssueNumber();
+              if (!issueNumber) return;
+              let label = null, status = null;
+              if (action === "opened") { label = "status: in progress"; status = "In Progress"; }
+              else if (action === "ready_for_review") { label = "status: in review"; status = "In Review"; }
+              else if (action === "closed" && context.payload.pull_request.merged) { label = "status: done"; status = "Done"; }
+              if (!label) return;
+
+              await setStatusLabel(issueNumber, label);
+              const itemId = await getItemId(issueNumber, meta.projectId);
+              if (itemId) await setField(meta.projectId, itemId, meta.fields["Status"], status);
+              return;
+            }
