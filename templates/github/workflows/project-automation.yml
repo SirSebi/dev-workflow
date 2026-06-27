@@ -10,6 +10,14 @@ env:
   GITHUB_USER: GITHUB_USER_PLACEHOLDER
   PROJECT_NUMBER: CENTRAL_PROJECT_NUMBER_PLACEHOLDER
 
+# Label-Jobs nutzen den Default-GITHUB_TOKEN; der ist repo-weit read-only.
+# issues:/pull-requests: write erlaubt das Setzen der Status-Labels.
+# (Das Board selbst läuft über PROJECT_TOKEN im add-to-project-Job.)
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   add-to-project:
     name: Zum zentralen Board hinzufügen
